@@ -1,0 +1,77 @@
+package metdothompson;
+import java_cup.runtime.Symbol;
+
+import java.util.ArrayList;
+parser code
+{:
+    /**Metodo al que se llama automáticamente ante algún error sintactico.*/
+    public void syntax_error(Symbol s){
+        System.out.println("Error en la Línea " + (s.right+1) +" Columna "+s.left+ ". Identificador "
+        +s.value + " no reconocido." );
+    }
+
+    /**Metodo al que se llama en el momento en que ya no es posible una recuperación de
+    errores.*/
+    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception{
+        System.out.println("Error en la Línea " + (s.right+1)+ " Columna "+s.left+". Identificador " +
+        s.value + " no reconocido.");
+
+   // Metodos graph =new Metodos();
+//ArrayList<Nodo> listaR=new ArrayList<Nodo>();
+    }
+:}
+
+action code
+{:
+	//AUN PENDIENTE
+	public String salida="";
+        Metodos graph =new Metodos();
+:}
+
+terminal Letra, Identificador, Caracter, Flecha, P_Coma, Doble_por, Disy, Conc, Cero_Mas, Uno_Mas, Uno_Cero, Salto, C_simple, C_doble, Tabu, Todo, R_reserv, Cadena;
+terminal Text, Row, Col, O_par, C_par, Retorno, Conj, DosPt, Coma, O_Bra, C_Bra, Err;
+
+non terminal INICIO, CUERPO_ARCHIV, ER, DEF_CONJUN, METODOS, CUERPO_ARCHIV_P, P_RESERVA, LISTA_RESERVA, RESERVADA, VALOR, E;
+
+//start with INICIO;
+start with ER;
+INICIO ::= Doble_por CUERPO_ARCHIV Doble_por;
+
+CUERPO_ARCHIV ::= Identificador Flecha ER Flecha METODOS
+				| DEF_CONJUN CUERPO_ARCHIV;
+
+METODOS ::= Retorno O_par Cadena Coma Text Coma Row Coma Col C_par P_RESERVA P_Coma CUERPO_ARCHIV
+		  | Err O_par Text Coma Row Coma Col C_par P_Coma CUERPO_ARCHIV_P;
+
+CUERPO_ARCHIV_P ::= Identificador Flecha ER Retorno O_par Cadena Coma Text Coma Row Coma Col C_par P_RESERVA P_Coma CUERPO_ARCHIV_P
+				 |	DEF_CONJUN CUERPO_ARCHIV_P
+				 | /*EPSILON*/;
+
+P_RESERVA ::= Flecha R_reserv O_Bra LISTA_RESERVA C_Bra
+			| /*EPSILON*/;
+
+LISTA_RESERVA ::= RESERVADA LISTA_RESERVA
+				| /*EPSILON*/;
+
+RESERVADA ::= Cadena Flecha Retorno O_par Cadena Coma Text Coma Row Coma Col C_par P_Coma;
+
+DEF_CONJUN ::= Conj DosPt Identificador Flecha P_Coma;
+
+ER ::= E:fin {:System.out.println(fin.toString());:};
+
+E ::= Conc E:n1 E:n2 {:RESULT = "("+n1.toString()+"."+n2.toString()+")_"+Variables.contador();Variables.graph.hacerGrafo(n1.toString(), n2.toString(), "And");:}
+	 | Disy E:n1 E:n2 {:RESULT = "("+n1.toString()+"|"+n2.toString()+")_"+Variables.contador();Variables.graph.hacerGrafo(n1.toString(), n2.toString(), "Or");:}
+	 | Cero_Mas E:n1 {:RESULT = "("+n1.toString()+"*"+")_"+Variables.contador();Variables.graph.hacerGrafo(n1.toString(), "z", "Aster");:}
+	 | Uno_Cero E:n1 {:RESULT ="("+n1.toString()+"?"+")_"+Variables.contador();Variables.graph.hacerGrafo(n1.toString(), "z", "Interrog");:}
+	 | Uno_Mas E:n1  {:RESULT ="("+n1.toString()+"+"+")_"+Variables.contador();Variables.graph.hacerGrafo(n1.toString(), "z", "Mas");:}
+	 | VALOR:res {:RESULT = res.toString();:};
+
+
+VALOR ::= Letra:id {: RESULT = id.toString(); :}
+		| Caracter:car {: RESULT = car.toString(); :}
+		| Salto:sal {: RESULT = sal.toString(); :}
+		| Tabu:tabul {: RESULT = tabul.toString(); :}
+		| C_doble:cdoble {: RESULT = cdoble.toString(); :}
+		| C_simple:csimple {: RESULT = csimple.toString(); :}
+		| Cadena:cad {:RESULT = cad.toString();:}
+		| Todo:tod {: RESULT = tod.toString(); :};
